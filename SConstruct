@@ -1,0 +1,8 @@
+env = DefaultEnvironment(CXXFLAGS='--std=c++11',  CCFLAGS='-g -Wall', LIBPATH='/usr/local/cuda-7.5/targets/x86_64-linux/lib')
+env.Tool('nvcc')
+env.Append(NVCCFLAGS='-std=c++11 -arch=sm_30 -g -G')
+env.Append(RPATH='/usr/local/cuda-7.5/targets/x86_64-linux/lib')
+test = env.Program(target='test', source=['test.cu'], LINK='g++', LIBS='cudart')
+testoutput = env.Command(target="test.txt", source="./test", action = "./test | tee $TARGET")
+Depends(testoutput, test)
+AlwaysBuild(testoutput)
