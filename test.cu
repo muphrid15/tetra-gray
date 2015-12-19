@@ -15,6 +15,11 @@ int choose_test();
 void multivector_zero_test();
 void multivector_vector_test();
 void multivector_multiply_test();
+void multivector_add_test();
+void multivector_scalar_multiply_test();
+void multivector_grade_project_test();
+void single_multiply_test_left();
+void single_multiply_test_right();
 
 int main(void)
 {
@@ -30,6 +35,11 @@ int main(void)
 	std::cout << "multivector_zero_test(): "; multivector_zero_test(); std::cout << std::endl;
 	std::cout << "multivector_vector_test(): "; multivector_vector_test(); std::cout << std::endl;
 	std::cout << "multivector_multiply_test(): "; multivector_multiply_test(); std::cout << std::endl;
+	std::cout << "multivector_add_test(): "; multivector_add_test(); std::cout << std::endl;
+	std::cout << "multivector_scalar_multiply_test(): "; multivector_scalar_multiply_test(); std::cout << std::endl;
+	std::cout << "multivector_grade_project_test(): "; multivector_grade_project_test(); std::cout << std::endl;
+	std::cout << "single_multiply_test_left(): "; single_multiply_test_left(); std::cout << std::endl;
+	std::cout << "single_multiply_test_right(): "; single_multiply_test_right(); std::cout << std::endl;
 
 	return 0;
 }
@@ -102,3 +112,67 @@ void multivector_multiply_test()
 	double vecb[4] = {2., 4., 6., 8.};
 	(Mv::makeMultivectorFromGrade<1>(veca)*Mv::makeMultivectorFromGrade<1>(vecb)).print(); //[-12 0 0 -2 0 -4 -2 0 0 -6 -4 0 -2 0 0 0 ]
 }
+
+void multivector_add_test()
+{
+	using Mv = Multivector<2,0,0,double>;
+	double veca[2] = {1., 3.};
+	double vecb[2] = {2, -1};
+
+	const auto smva = SingleGradedMultivector<1,2,0,0,double>(veca);
+	const auto smvb = SingleGradedMultivector<1,2,0,0,double>(vecb);
+
+	const auto mva = Mv::makeMultivectorFromGrade<1>(smva);
+	const auto mvb = Mv::makeMultivectorFromGrade<1>(smvb);
+
+	(mva*mvb+mva).print(); //[-1 1 3 -7]
+}
+
+void multivector_scalar_multiply_test()
+{
+	using Mv = Multivector<2,0,0,double>;
+	double veca[2] = {1., 3.};
+
+	const auto mva = Mv::makeMultivectorFromGrade<1>(veca);
+	(mva*5.).print(); //[0 5 15 0]
+}
+
+void multivector_grade_project_test()
+{
+	using Mv = Multivector<2,0,0,double>;
+	double veca[2] = {1., 3.};
+	double vecb[2] = {2, -1};
+
+	const auto smva = SingleGradedMultivector<1,2,0,0,double>(veca);
+	const auto smvb = SingleGradedMultivector<1,2,0,0,double>(vecb);
+	const auto mva = Mv::makeMultivectorFromGrade<1>(smva);
+	const auto mvb = Mv::makeMultivectorFromGrade<1>(smvb);
+
+	((mva*mvb+mva) % 2U).print(); //[0 0 0 -7]
+}
+
+void single_multiply_test_left()
+{
+	using Mv = Multivector<2,0,0,double>;
+	double veca[2] = {1., 3.};
+	double vecb[2] = {2, -1};
+
+	const auto smva = SingleGradedMultivector<1,2,0,0,double>(veca);
+	const auto smvb = SingleGradedMultivector<1,2,0,0,double>(vecb);
+	const auto mvb = Mv::makeMultivectorFromGrade<1>(smvb);
+	(smva*mvb).print(); //[-1 0 0 -7]
+}
+
+void single_multiply_test_right()
+{
+	using Mv = Multivector<2,0,0,double>;
+	double veca[2] = {1., 3.};
+	double vecb[2] = {2, -1};
+
+	const auto smva = SingleGradedMultivector<1,2,0,0,double>(veca);
+	const auto smvb = SingleGradedMultivector<1,2,0,0,double>(vecb);
+	const auto mva = Mv::makeMultivectorFromGrade<1>(smva);
+	const auto mvb = Mv::makeMultivectorFromGrade<1>(smvb);
+	(mva*smvb).print(); //[-1 0 0 -7]
+}
+
