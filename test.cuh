@@ -20,3 +20,6 @@ void printArray(const A (&a)[length])
 	}
 	std::cout << ")";
 }
+
+
+

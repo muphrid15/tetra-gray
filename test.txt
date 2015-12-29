@@ -15,3 +15,11 @@ multivector_scalar_multiply_test(): [0 5 15 0 ]
 multivector_grade_project_test(): [0 0 0 -7 ]
 single_multiply_test_left(): [-1 0 0 -7 ]
 single_multiply_test_right(): [-1 0 0 -7 ]
+host_list_concat_fold_test(): 3
+host_list_range_map_test(): 3
+host_list_fmap_test(): 3
+device_list_concat_fold_test(): 3
+device_list_fmap_test(): 3
+single_particle_evolve_test(): [0 0 0 2 ]
+multivector_rotate_test(): [0 -0.707107 0.707107 0 ]
+multivector_trig_rotate_test(): [0 -3.67321e-06 1 0 ]

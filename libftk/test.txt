@@ -1,0 +1,17 @@
+curry_test():  3
+reverse_curry_test(): 3
+compose_test(): 3
+identity_unit_test(): 3
+identity_bind_test(): 3
+identity_global_join_test(): 3
+identity_apply_test(): 3
+identity_then_test(): 3
+printLn() test: 3
+procedure_unit_test(): 3
+procedure_fmap_test(): 3
+procedure_join_test(): 3
+list_concat_fold_test(): 3
+list_range_map_test(): 3
+list_unit_test(): 3
+list_fmap_test(): 3
+list_join_test(): 3
