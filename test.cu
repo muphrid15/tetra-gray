@@ -8,6 +8,12 @@
 #include "particle.cuh"
 #include "rhs.cuh"
 #include "orientation.cuh"
+#include "types.cuh"
+#include "raytracer.cuh"
+#include "image.cuh"
+#include "libftk/functor.h"
+#include "libftk/operator.h"
+#include "image_id.cuh"
 
 double rk4_test();
 int popcount_test();
@@ -34,6 +40,11 @@ int device_list_fmap_test();
 void single_particle_evolve_test();
 void multivector_rotate_test();
 void multivector_trig_rotate_test();
+void compress_to_grade_test();
+void single_photon_test();
+void single_photon_test_position();
+void camera_id_test();
+void camera_id_host_test();
 
 int main(void)
 {
@@ -68,6 +79,11 @@ int main(void)
 	std::cout << "single_particle_evolve_test(): "; single_particle_evolve_test(); std::cout << std::endl;
 	std::cout << "multivector_rotate_test(): "; multivector_rotate_test(); std::cout << std::endl;
 	std::cout << "multivector_trig_rotate_test(): "; multivector_trig_rotate_test(); std::cout << std::endl;
+	std::cout << "compress_to_grade_test(): "; compress_to_grade_test(); std::cout << std::endl;
+	std::cout << "single_photon_test(): "; single_photon_test(); std::cout << std::endl;
+	std::cout << "single_photon_test_position(): "; single_photon_test_position(); std::cout << std::endl;
+	std::cout << "camera_id_test(): "; camera_id_test(); std::cout << std::endl;
+	std::cout << "camera_id_host_test(): "; camera_id_host_test(); std::cout << std::endl;
 	return 0;
 }
 
@@ -241,7 +257,7 @@ int device_list_fmap_test(void)
 void single_particle_evolve_test()
 {
 	using R = double;
-	using Pt = ray::Particle<3, 1, 0, R>;
+	using Pt = pt::Particle<3, 1, 0, R>;
 
 	const R posarr[4] = {0., 0., 0., 0.};
 	const R momarr[4] = {0., 0., 0., 1.};
@@ -250,7 +266,7 @@ void single_particle_evolve_test()
 
 	using Data = ode::ODEData<Pt, R>;
 
-	(ode::ODEIntegrator()(Data(pinit, 0., .1), ode::RK4(), ray::FlatRHS<3, 1, 0, R>(), [] (Data dat) { return dat.param >= 2.; })).value.position.print(); 
+	(ode::ODEIntegrator()(Data(pinit, 0., .1), ode::RK4(), ray::FlatRHS(), [] (Data dat) { return dat.param >= 2.; })).value.position.print(); 
 }
 
 void multivector_rotate_test()
@@ -288,4 +304,119 @@ void multivector_trig_rotate_test()
 
 	const auto rotor = ray::simpleRotorFromAngle(smva, smvb, angle);
 	ray::bilinearMultiply(rotor, Mv::makeMultivectorFromGrade(smvc)).print();
+}
+
+void compress_to_grade_test()
+{
+	using Mv = mv::Multivector<2,0,0,double>;
+	using SMv = mv::SingleGradedMultivector<1,2,0,0,double>;
+	double veca[2] = {1., 2.};
+	double vecb[2] = {4., 7.};
+
+	const auto smva = SMv(veca);
+	const auto smvb = SMv(vecb);
+
+	const auto mvc = smva*smvb;
+	auto smvc = SMv(mvc);
+	smvc.print();
+}
+
+void single_photon_test()
+{
+	using cudaftk::operator/;
+	using cudaftk::operator%;
+	using ftk::operator|;
+	using ftk::operator>>;
+	using cudaftk::operator*;
+	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float extract_radius = 50.f;
+	const auto camposvec = ray::Vector<float>(campos);
+	const float pho_mom[4] = {-.707f, -.707f, 0.f, -1.f};
+	const auto photon_momentum = ray::Vector<float>(pho_mom);
+
+	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
+	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
+	auto result = olist | ftk::fmap >>
+	   	((ode::ODEIntegrator() / (ray::CombinedStopCondition() % extract_radius % 1000.f)
+	   	/ ray::FlatRHS()
+		/ ode::RK4())
+		 * (ray::SphericalColormap() % extract_radius));
+
+	thrust::host_vector<uint> hostresult = result.unpack();
+	std::cout << hostresult[0];
+}
+
+void single_photon_test_position()
+{
+	using cudaftk::operator/;
+	using cudaftk::operator%;
+	using ftk::operator|;
+	using ftk::operator>>;
+	using cudaftk::operator*;
+	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float extract_radius = 50.f;
+	const auto camposvec = ray::Vector<float>(campos);
+	const float pho_mom[4] = {-.707f, -.707f, 0.f, -1.f};
+	const auto photon_momentum = ray::Vector<float>(pho_mom);
+	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
+
+	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
+	auto result = olist | ftk::fmap >>
+	   	((ode::ODEIntegrator() / (ray::CombinedStopCondition() % extract_radius % 1000.f)
+	   	/ ray::FlatRHS()
+		/ ode::RK4()));
+
+	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
+	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
+	std::cout << "Momentum:"; hostresult[0].value.momentum.print(); std::cout << std::endl;
+}
+
+void camera_id_test()
+{
+	using cudaftk::operator/;
+	using cudaftk::operator%;
+	using ftk::operator|;
+	using ftk::operator>>;
+	using cudaftk::operator*;
+	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float extract_radius = 50.f;
+	const auto camposvec = ray::Vector<float>(campos);
+	const float pho_mom[4] = {-1.f, 0.f, 0.f, -1.f};
+	const auto photon_momentum = ray::Vector<float>(pho_mom);
+	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
+
+//	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
+	const auto zero_list = cudaftk::GPUList<uint>(0u);
+	auto result = zero_list | ftk::fmap >>
+		((ray::ImageInitialDataSolver() % camposvec % ray::Multivector<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
+
+	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
+	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
+	std::cout << "Momentum:"; hostresult[0].value.momentum.print(); std::cout << std::endl;
+	std::cout << "Color:" << ray::SphericalColormap()(extract_radius, hostresult[0]) << std::endl;
+}
+
+void camera_id_host_test()
+{
+	using cudaftk::operator/;
+	using cudaftk::operator%;
+	using ftk::operator|;
+	using ftk::operator>>;
+	using cudaftk::operator*;
+	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float extract_radius = 50.f;
+	const auto camposvec = ray::Vector<float>(campos);
+	const float pho_mom[4] = {-1.f, 0.f, 0.f, -1.f};
+	const auto photon_momentum = ray::Vector<float>(pho_mom);
+	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
+
+//	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
+	const auto zero_list = cudaftk::CPUList<uint>(0u);
+	auto result = zero_list | ftk::fmap >>
+		((ray::ImageInitialDataSolver() % camposvec % ray::Multivector<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
+
+	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
+	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
+	std::cout << "Momentum:"; hostresult[0].value.momentum.print(); std::cout << std::endl;
+	std::cout << "Color:" << ray::SphericalColormap()(extract_radius, hostresult[0]) << std::endl;
 }

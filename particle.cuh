@@ -2,7 +2,7 @@
 #define PARTICLE_HDR
 #include "clifford.cuh"
 
-namespace ray
+namespace pt
 {
 	template<uint plus_dim, uint minus_dim, uint zero_dim, typename R>
 	struct Particle
@@ -22,6 +22,8 @@ namespace ray
 				position = Smv(posarr);
 				momentum = Smv(momarr);
 			}
+
+			__host__ __device__ Particle() : position(Smv()), momentum(Smv()) {}
 			__host__ __device__ Particle(const Smv& pos, const Smv& mom) : position(pos), momentum(mom) {}
 
 			__host__ __device__ Particle& operator*=(const R& scalar)

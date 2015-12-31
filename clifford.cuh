@@ -7,6 +7,10 @@ namespace mv
 {
 	namespace impl
 	{
+		__host__ __device__ constexpr uint ipow2(const uint& radix)
+		{
+			return 1u << radix;
+		}
 		__host__ __device__ constexpr uint ipow(const uint& base, const uint& radix)
 		{
 			return (radix == 0) ? 1 : base*ipow(base, radix-1);
@@ -28,29 +32,29 @@ namespace mv
 		   }
 		 */
 
-		__host__ __device__ int popcount(const uint& val)
+		__host__ __device__ inline int popcount(const uint val)
 		{
-#ifdef CUDA_ARCH
+#ifdef __CUDA_ARCH__
 			return __popc(val);
 #else
 			return __builtin_popcount(val);
 #endif
 		}
 
-		__host__ __device__ int contractionSign(const uint& plus_dim, const uint& minus_dim, const uint& zero_dim, const uint& contracted_mask)
+		__host__ __device__ inline int contractionSign(const uint& plus_dim, const uint& minus_dim, const uint& zero_dim, const uint& contracted_mask)
 		{
-			const uint zero_mask = (ipow(2,zero_dim)-1)*ipow(2,plus_dim+minus_dim);
-			const uint minus_mask = (ipow(2,minus_dim)-1)*ipow(2,plus_dim);
+			const uint zero_mask = (ipow2(zero_dim)-1)*ipow2(plus_dim+minus_dim);
+			const uint minus_mask = (ipow2(minus_dim)-1)*ipow2(plus_dim);
 			return popcount(zero_mask & contracted_mask) > 0 ? 0 : popcount(minus_mask & contracted_mask) % 2 == 1 ? -1 : 1;
 		}
 
-		__host__ __device__ int permutationSign(const uint& left_mask, const uint& right_mask, const uint& max_bits)
+		__host__ __device__ inline int permutationSign(const uint& left_mask, const uint& right_mask, const uint& max_bits)
 		{
 			int result = 0;
 			for(uint test_mask_log = 1; test_mask_log < max_bits; test_mask_log++)
 			{
-				uint count_mask = ipow(2,test_mask_log) - 1;
-				result += (popcount(left_mask & ipow(2,test_mask_log)) == 0) ? 0 : popcount(count_mask & right_mask);
+				uint count_mask = ipow2(test_mask_log) - 1;
+				result += (popcount(left_mask & ipow2(test_mask_log)) == 0) ? 0 : popcount(count_mask & right_mask);
 			}
 			return (result % 2 == 0) ? 1 : -1;
 		}
@@ -164,6 +168,7 @@ namespace mv
 						impl::transformArray(coeffs, impl::Zeroer<R>());
 					}
 
+
 					__host__ void print()
 					{
 						std::cout << "[";
@@ -173,7 +178,31 @@ namespace mv
 
 
 					friend class Multivector<plus_dim, minus_dim, zero_dim, R>;
+					__host__ __device__ SingleGradedMultivector(const MV& multi)
+					{
+						const auto other = multi % grade;	
+						uint grade_components_taken= 0;
+						const uint num_compressed_components = impl::choose(MV::dimensions(), grade);
+						R compressed_components[num_compressed_components];
+						for(uint i = 0; i < MV::components(); i++)
+						{
+							if(grade_components_taken >= num_compressed_components)
+							{
+								break;
+							}
+							else if(impl::popcount(i) == grade)
+							{
+								compressed_components[grade_components_taken] = multi.coeffs[i];
+								grade_components_taken++;
+							}
+						}
+						*this = SingleGradedMultivector(compressed_components);
+					}
 					
+					__host__ __device__ R extractComponent(const uint& idx) const
+					{
+						return (idx < components()) ? coeffs[idx] : 0;
+					}
 					__host__ __device__  MV promote() const
 					{
 						return MV::makeMultivectorFromGrade(*this);
@@ -237,7 +266,7 @@ namespace mv
 
 				__host__ __device__ constexpr static uint components()
 				{
-					return impl::ipow(2, dimensions());
+					return impl::ipow2( dimensions());
 				}
 
 				__host__ __device__ constexpr static uint gradeComponents(const uint grade)
@@ -266,27 +295,6 @@ namespace mv
 						return ret;
 					}
 
-				template<uint grade>
-					__host__ __device__ SMV<grade> compressToGrade() const
-					{
-						const Multivector other = *this % grade;	
-						uint grade_components_taken= 0;
-						const uint num_compressed_components = choose(dimensions(), grade);
-						R compressed_components[num_compressed_components];
-						for(uint i = 0; i < components(); i++)
-						{
-							if(grade_components_taken >= num_compressed_components)
-							{
-								break;
-							}
-							else if(impl::popcount(i) == grade)
-							{
-								compressed_components[grade_components_taken] = other.coeffs[i];
-								grade_components_taken++;
-							}
-						}
-						return SMV<grade>(compressed_components);
-					}
 				public:
 				__host__ __device__ Multivector()
 				{
@@ -427,7 +435,7 @@ namespace mv
 
 				__host__ __device__ R norm2() const
 				{
-					return (*this*(this->reverse())).coeffs[0];
+					return abs((*this*(this->reverse())).coeffs[0]);
 				}
 
 				__host__ __device__ R norm() const

@@ -23,3 +23,16 @@ device_list_fmap_test(): 3
 single_particle_evolve_test(): [0 0 0 2 ]
 multivector_rotate_test(): [0 -0.707107 0.707107 0 ]
 multivector_trig_rotate_test(): [0 -3.67321e-06 1 0 ]
+compress_to_grade_test(): [0 0 ]
+single_photon_test(): 0
+single_photon_test_position(): Position:[-24.541 -44.541 0 -63 ]
+Momentum:[-0.707 -0.707 0 -1 ]
+
+camera_id_test(): Position:[20 0 0 0 ]
+Momentum:[-0.901608 -0.373134 0.218802 -1 ]
+Color:65535
+
+camera_id_host_test(): Position:[20 0 0 0 ]
+Momentum:[-0.901608 -0.373134 0.218802 -1 ]
+Color:65535
+
