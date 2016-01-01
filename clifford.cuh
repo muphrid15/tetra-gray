@@ -234,6 +234,27 @@ namespace mv
 						return ret;
 					}
 
+					__host__ __device__ SingleGradedMultivector operator-() const
+					{
+						auto ret = *this;
+						ret *= -1;
+						return ret;
+					}
+
+					__host__ __device__ SingleGradedMultivector& operator-=(const SingleGradedMultivector& sgother)
+					{
+						*this += -sgother;
+						return *this;
+					}
+
+					__host__ __device__ SingleGradedMultivector operator-(const SingleGradedMultivector& rhs) const
+					{
+						auto ret = *this;
+						ret -= rhs;
+						return ret;
+					}
+
+
 					__host__ __device__ MV operator*(const MV& mv) const
 					{
 						return MV::makeMultivectorFromGrade(*this)*mv;
@@ -295,10 +316,17 @@ namespace mv
 						return ret;
 					}
 
-				public:
+
 				__host__ __device__ Multivector()
 				{
 					impl::transformArray(coeffs, impl::Zeroer<R>());
+				}
+				
+				__host__ __device__ static Multivector makePseudoscalar(const R& val)
+				{
+					auto ret = Multivector();
+					ret.coeffs[components()-1u] = val;
+					return ret;
 				}
 
 				__host__ __device__ Multivector(const R& scalar)
@@ -462,6 +490,12 @@ namespace mv
 
 		template<uint plus_dim, uint minus_dim, uint zero_dim, typename R>
 		__host__ __device__ Multivector<plus_dim, minus_dim, zero_dim, R> operator*(const R& scalar, const Multivector<plus_dim, minus_dim, zero_dim, R>& multi)
+		{
+			return multi*scalar;
+		}
+
+		template<uint grade, uint plus_dim, uint minus_dim, uint zero_dim, typename R>
+		__host__ __device__ SingleGradedMultivector<grade, plus_dim, minus_dim, zero_dim, R> operator*(const R& scalar, const SingleGradedMultivector<grade, plus_dim, minus_dim, zero_dim, R>& multi)
 		{
 			return multi*scalar;
 		}

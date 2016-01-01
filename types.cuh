@@ -12,6 +12,9 @@ namespace ray
 
 	template<typename R>
 	using Vector = mv::SingleGradedMultivector<1, 3, 1, 0, R>;
+
+	template<typename R>
+	using Bivector = mv::SingleGradedMultivector<2, 3, 1, 0, R>;
 	
 	template<typename R>
 	using Particle = pt::Particle<3, 1, 0, R>;
