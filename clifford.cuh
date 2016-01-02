@@ -180,23 +180,21 @@ namespace mv
 					friend class Multivector<plus_dim, minus_dim, zero_dim, R>;
 					__host__ __device__ SingleGradedMultivector(const MV& multi)
 					{
-						const auto other = multi % grade;	
-						uint grade_components_taken= 0;
-						const uint num_compressed_components = impl::choose(MV::dimensions(), grade);
-						R compressed_components[num_compressed_components];
-						for(uint i = 0; i < MV::components(); i++)
+						*this = SingleGradedMultivector();
+						int last = -1;
+						for(int j = 0; j < components(); j++)
 						{
-							if(grade_components_taken >= num_compressed_components)
+							bool set = false;
+							for(int i = 0; i < MV::components(); i++)
 							{
-								break;
-							}
-							else if(impl::popcount(i) == grade)
-							{
-								compressed_components[grade_components_taken] = multi.coeffs[i];
-								grade_components_taken++;
+								if(impl::popcount(i) == int(grade) && i > last && !set)
+								{
+									this->coeffs[j] = multi.coeffs[i];
+									last = i;
+									set = true;
+								}
 							}
 						}
-						*this = SingleGradedMultivector(compressed_components);
 					}
 					
 					__host__ __device__ R extractComponent(const uint& idx) const
@@ -214,7 +212,7 @@ namespace mv
 						return *this;
 					}
 
-					__host__ __device__ SingleGradedMultivector operator+(const SingleGradedMultivector& mo)
+					__host__ __device__ SingleGradedMultivector operator+(const SingleGradedMultivector& mo) const
 					{
 						SingleGradedMultivector ret = *this;
 						ret += mo;
@@ -463,12 +461,16 @@ namespace mv
 
 				__host__ __device__ R norm2() const
 				{
-					return abs((*this*(this->reverse())).coeffs[0]);
+					return (*this*(this->reverse())).coeffs[0];
+				}
+				__host__ __device__ R absnorm2() const
+				{
+					return abs(this->norm2());
 				}
 
 				__host__ __device__ R norm() const
 				{
-					return sqrt(this->norm2());
+					return sqrt(this->absnorm2());
 				}
 
 				__host__ __device__ R scalarPart() const

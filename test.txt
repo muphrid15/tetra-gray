@@ -36,3 +36,6 @@ camera_id_host_test(): Position:[20 0 0 0 ]
 Momentum:[-0.901608 -0.373134 0.218802 -1 ]
 Color:65535
 
+single_photon_test_position_doran(): Position:[15.926 -0.724556 1.49971e-07 -1.08487 ]
+Momentum:[-0.778217 -0.880826 8.22893e-09 -1.17549 ]
+

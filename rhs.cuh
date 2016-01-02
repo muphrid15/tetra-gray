@@ -39,7 +39,7 @@ namespace ray
 		{
 			const auto rootfactor = R(sqrt(2.*sinh_mu/scale_factor_a/(1.+sinh_mu*sinh_mu)));
 			const auto dot_product = (vec_arg*doran_vec_v).scalarPart();
-			return vec_arg - rootfactor*dot_product*emuhat;
+			return vec_arg + rootfactor*dot_product*emuhat;
 		}
 
 	template<typename R>
@@ -47,15 +47,16 @@ namespace ray
 		{
 			const R alpha = R(-sqrt(2.*sinh_mu/(scale_factor_a*(sinh_mu*sinh_mu + cos_nu*cos_nu))));
 
-			const auto common_denom = (scale_factor_a*(Multivector<R>(sinh_mu) - Multivector<R>::makePseudoscalar(cos_nu))).inverse();
+			const auto common_denom_inverse = (scale_factor_a*(Multivector<R>(sinh_mu) + Multivector<R>::makePseudoscalar(cos_nu)));
+			const auto common_denom = common_denom_inverse.inverse();
 
 			const auto arg_dot_mu = (vec_arg*muhat).scalarPart();
 			const auto arg_dot_nu = (vec_arg*nuhat).scalarPart();
 			const auto arg_dot_phi = (vec_arg*phihat).scalarPart();
 
-			const auto uterm = Bivector<R>(-common_denom*common_denom/alpha*Bivector<R>(muhat*doran_v));
-			const auto nuterm = Bivector<R>(alpha*common_denom*Bivector<R>(nuhat*doran_v));
-			const auto phiterm = alpha/cosh(beta)*Bivector<R>(common_denom*Bivector<R>(phihat*that));
+			const auto uterm = R(1./alpha)*Bivector<R>(common_denom*common_denom*Bivector<R>(muhat*doran_v));
+			const auto nuterm = alpha*Bivector<R>(-common_denom*Bivector<R>(nuhat*doran_v));
+			const auto phiterm = alpha/cosh(beta)*Bivector<R>(-common_denom*Bivector<R>(phihat*that));
 
 			return arg_dot_mu*uterm + arg_dot_nu*nuterm + arg_dot_phi*phiterm;
 		}
@@ -82,11 +83,11 @@ namespace ray
 				const auto nuhat = spheroidalBasisVectorEnu(sinh_mu, cosh_mu, sin_nu, cos_nu, sin_phi, cos_phi);
 				const auto phihat = spheroidalBasisVectorPhi(sin_phi,cos_phi);
 				const auto that = spheroidalBasisVectorT<R>();
-				const auto beta = doranBeta(cosh_mu, sinh_mu);
+				const auto beta = doranBeta(cosh_mu, sin_nu);
 				const auto doran_vector_v = doranVectorV(beta, sin_phi, cos_phi, that, phihat);
 
 				const auto posrhs = doranPositionGauge(sinh_mu, muhat, scale_factor_a, doran_vector_v, data.momentum);
-				const auto momrhs = Vector<R>(doranRotationGauge(sinh_mu, cosh_mu, muhat, nuhat, phihat, that, beta, doran_vector_v, scale_factor_a, data.momentum)*data.momentum);
+				const auto momrhs = -Vector<R>(doranRotationGauge(sinh_mu, cos_nu, muhat, nuhat, phihat, that, beta, doran_vector_v, scale_factor_a, data.momentum)*data.momentum);
 				return pt::makeParticle(posrhs, momrhs);
 			}
 	};

@@ -14,7 +14,7 @@ namespace ray
 
 		const R r = sqrt(x*x + y*y + z*z);
 		const R theta = (r > 0.) ? acos(z/r) : 0.;
-		const R phi = atan2(x, y);
+		const R phi = atan2(y, x);
 		const R spherical_coordinates[4] = { r, theta, phi, t };
 		return Vector<R>(spherical_coordinates);
 	}
@@ -28,13 +28,17 @@ namespace ray
 		const R z = posvec.extractComponent(2);
 		const R t = posvec.extractComponent(3);
 
-		const R phi = atan2(x, y);
-		const R rho = x*x + y*y;
+		const R phi = atan2(y, x);
+		const R rho = sqrt(x*x + y*y);
 		const R d1 = sqrt((rho+scale_factor_a)*(rho+scale_factor_a) + z*z);
 		const R d2 = sqrt((rho-scale_factor_a)*(rho-scale_factor_a) + z*z);
 		
-		const R mu = acosh((d1 + d2)/(2*scale_factor_a));
-		const R nu = asin((d1 - d2)/(2*scale_factor_a));
+		const R cosh_mu = ((d1 + d2)/(2*scale_factor_a));
+		const R mu = acosh(cosh_mu);
+		const R cos2_nu = 1. - (d1-d2)*(d1-d2)/(4.*scale_factor_a*scale_factor_a);
+		const R cos_nu_sign = copysign(sqrt(fmax(cos2_nu, R(0.))), z);
+		const R nu = acos(cos_nu_sign);
+//		const R nu = acos(z/(scale_factor_a*cosh_mu));
 
 		const R spheroidal_coordinates[4] = { mu, nu, phi, t };
 		return Vector<R>(spheroidal_coordinates);
@@ -50,14 +54,14 @@ namespace ray
 	template<typename R>
 	__host__ __device__ inline Vector<R> spheroidalBasisVectorEnu(const R& sinh_mu, const R& cosh_mu, const R& sin_nu, const R& cos_nu, const R& sin_phi, const R& cos_phi)
 	{
-		const R components[4] = { -cosh_mu*cos_nu*cos_phi, -cosh_mu*cos_nu*sin_phi, sinh_mu*sin_nu, R(0.) };
+		const R components[4] = { cosh_mu*cos_nu*cos_phi, cosh_mu*cos_nu*sin_phi, -sinh_mu*sin_nu, R(0.) };
 		return Vector<R>(components)*R(1./sqrt(sinh_mu*sinh_mu + cos_nu*cos_nu));
 	}
 
 	template<typename R>
 	__host__ __device__ inline Vector<R> spheroidalBasisVectorPhi(const R& sin_phi, const R& cos_phi)
 	{
-		const R components[4] = { cos_phi, sin_phi, R(0.), R(0.) };
+		const R components[4] = { -sin_phi, cos_phi, R(0.), R(0.) };
 		return Vector<R>(components);
 	}
 	

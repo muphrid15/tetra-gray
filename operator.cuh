@@ -44,10 +44,10 @@ namespace cudaftk
 			G second;
 			__host__ __device__ ComposeFunctor(F f, G g) : first(f), second(g) {}
 
-			template<typename A>
-				__host__ __device__ constexpr auto operator()(A a) const -> decltype(second(first(a)))
+			template<typename... Args>
+				__host__ __device__ constexpr auto operator()(Args... a) const -> decltype(second(first(a...)))
 				{
-					return second(first(a));
+					return second(first(a...));
 				}
 		};
 	/*
