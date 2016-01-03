@@ -9,7 +9,7 @@ int main(void)
 	using cudaftk::operator%;
 	using cudaftk::operator/;
 	using cudaftk::operator*;
-	const float campos[4] = {0.f, 1.f, 0.f, 0.f};
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const float stepsize = 0.05f;
 	const float max_step_ratio = 40.f;
@@ -23,7 +23,8 @@ int main(void)
 			720U,
 			float(ray::PI/2.f),
 			camposvec,
-			ray::simpleRotorFromAngle(ray::Vector<float>(xdir), ray::Vector<float>(ydir), float(ray::PI/2.f)),
+//			ray::simpleRotorFromAngle(ray::Vector<float>(xdir), ray::Vector<float>(ydir), float(ray::PI/2.f)),
+			ray::Versor<float>(1.f),
 			"doran.png",
 			stepsize,
 			ray::ImageInitialDataSolver(),

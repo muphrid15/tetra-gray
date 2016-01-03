@@ -19,9 +19,9 @@ namespace ray
 					//this converts to rotating about the baseline left, then baseline up (converting body rotations to fixed axis rotations is always a reversed sequence of rotations)
 					//hence, we use the baseline orientation directions here
 					const R baseline_time_dir[4] = {1., 0., 0., 0.};
+					const R baseline_out_dir[4] = {0., -1., 0., 0.};
 					const R baseline_left_dir[4] = {0., 0., 1., 0.};
 					const R baseline_up_dir[4] = {0., 0., 0., 1.};
-					const R baseline_out_dir[4] = {0., -1., 0., 0.};
 
 					const auto vec_out_dir = Vector<R>(baseline_out_dir);
 					const auto vec_left_dir = Vector<R>(baseline_left_dir);
@@ -48,6 +48,7 @@ namespace ray
 				}
 	};
 
+	//Test purposes only
 	struct DoNothingImageIDSolver
 	{
 		public:

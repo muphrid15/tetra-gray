@@ -10,6 +10,8 @@
 
 namespace cudaftk
 {
+	//Thrust vector types are just default templates; alloc is required
+	//see libftk/list.h for model example that this class is imitating
 	template<template<typename, typename> class V, template<typename> class Alloc, typename A>
 		class ThrustList
 		{

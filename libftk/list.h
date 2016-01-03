@@ -1,13 +1,15 @@
 #ifndef FTK_LIST_HDR
 #define FTK_LIST_HDR
-#include "monad.h"
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include "monad.h"
 
 namespace ftk
 {
-
+	//ListLike describes properties of a type constructor (Li), not data
+	//Hence, range is a function that is characteristic of the type constructor
+	//This is a means to access range using template argument deduction
 	template<template<typename> class Li>
 		struct ListLike
 		{
@@ -24,6 +26,8 @@ namespace ftk
 				constexpr static RangeFunctor range = RangeFunctor();
 		};
 
+	//Most other functions are functions on data
+	//ListLikeData is a thin, generic wrpaper that concrete implementations should follow
 	template<typename Lia>
 		struct ListLikeData : public ListLike<Parameterizable<Lia>::template Typecons>
 		{
@@ -51,7 +55,6 @@ namespace ftk
 
 				}
 
-					
 				template<typename F>
 					static auto map(const F& f, const Lia& la) -> Tc<decltype(f(std::declval<A>()))>
 					{
@@ -59,6 +62,7 @@ namespace ftk
 					}
 		};
 
+	//The following functors (as in function objects, not Hasekll-type functors) enable the use of lists with template argument deduction
 	struct ConcatFunctor
 	{
 		template<typename Lia>
@@ -92,10 +96,13 @@ namespace ftk
 
 	constexpr LengthFunctor length = LengthFunctor();
 	
+	//Any list can be made into a monad if it supports the operations
+	//This is using curiously recurring template pattern
 	template<typename Lia>
 	struct ListLikeDataMonad : public MonadDefault<Lia>
 	{
 		private:
+			//These typedefs are for brevity, and therefore not public
 			using A = typename Parameterizable<Lia>::BaseType;
 
 			template<typename B>

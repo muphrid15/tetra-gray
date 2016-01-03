@@ -8,6 +8,22 @@
 
 namespace ray
 {
+	//Required signatures:
+	//R: some real data type (double, float)
+	//Z+: uint
+	//M<R>: versor
+	//V<R>: vector
+	//X: arb type
+	//2: bool
+	//(): void
+	//S: string (char*)
+	//O<X,R>: ode::ODEData<X,R> (i.e. (X, R, R) )
+	//ImageID: V<R> x M<R> x Z+ x Z+ x R x R x Z+ -> X
+	//RHS: XxR -> X
+	//Integrator: O<X,R> x RHS -> O<X,R>
+	//Stop: O<X,R> -> 2
+	//Colormap: O<X,R> -> Z+
+	//ImageWriter: Z+ x Z+ x Z+ x S -> ()
 	template<typename R, typename Integrator, typename ImageID, typename RHS, typename Stop, typename Colormap, typename ImageWriter>
 	void raytrace(
 			const uint& img_width_px,

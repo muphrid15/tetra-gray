@@ -20,7 +20,11 @@ namespace ray
 				return rhs;
 			}
 	};
+	/*
+	   Functions for Doran spinning black holes
 
+	   These equations are detailed in section 14.7.3 of Doran and Lasenby, i.e. Geometric Algebra for Physicists
+	  */
 
 	template<typename R>
 		__host__ __device__ R inline doranBeta(const R& cosh_mu, const R& sin_nu)
@@ -98,6 +102,7 @@ namespace ray
 				const auto beta = doranBeta(cosh_mu, sin_nu);
 				const auto doran_vector_v = doranVectorV(beta, sin_phi, cos_phi, that, phihat);
 
+				//The geodesic equation: x' = h(k), k' = -omega(k)|k (cartesian coords, no derivatives of basis vectors)
 				const auto posrhs = doranPositionGauge(sinh_mu, muhat, scale_factor_a, doran_vector_v, data.momentum);
 				const auto momrhs = -(doranRotationGauge(sinh_mu, cos_nu, muhat, nuhat, phihat, that, beta, doran_vector_v, scale_factor_a, data.momentum)|data.momentum);
 				return Particle<R>(posrhs, momrhs);

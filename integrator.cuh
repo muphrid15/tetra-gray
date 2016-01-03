@@ -3,6 +3,7 @@
 
 namespace ode
 {
+	//param is arbitrary, need not represent time (and doesn't in GR)
 	template<class A, class Real>
 		struct ODEData
 		{
@@ -14,6 +15,13 @@ namespace ode
 		};
 
 
+	//Summary of required function signatures:
+	//A: whatever data we're evolving
+	//R: the real data type (float, double, etc.)
+	//O<A,R>: the ode data
+	//Stepper: O<A,R> x (AxR -> A) -> O<A,R>
+	//RHS: AxR -> A
+	//Stop: O<A,R> -> 2 (bool)
 	struct ODEIntegrator
 	{
 		template<typename A, typename RHS, typename Stepper, typename Stop, typename Real>
@@ -27,7 +35,6 @@ namespace ode
 				return odenow;
 			}
 	};
-
 
 	struct RK4
 	{

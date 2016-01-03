@@ -3,6 +3,12 @@
 
 namespace cudaftk
 {
+	/*
+		The templates here allow us to flexibly massage general functions into the kinds required for other higher-order functions
+		CurryFunctor: stores a function object and its first argument, yields a function on the remaining arguments
+		Reverse"": stores the last argument instead
+		ComposeFunctor: composition of functions (provided left to right for ease of readability)
+	   */
 	template<typename F, typename A>
 		class CurryFunctor
 		{
@@ -20,6 +26,7 @@ namespace cudaftk
 					}
 		};
 
+	//Reverse curry stores the function object and its last argument
 	template<typename F, typename A>
 		class ReverseCurryFunctor
 		{

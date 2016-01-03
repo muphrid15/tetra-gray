@@ -1,8 +1,8 @@
 #ifndef IMAGE_HDR
 #define IMAGE_HDR
+#include <png++/png.hpp>
 #include "types.cuh"
 #include "coord_systems.cuh"
-#include <png++/png.hpp>
 #include "thrustlist.cuh"
 
 namespace ray
@@ -34,19 +34,26 @@ namespace ray
 			}	
 	};
 
-	constexpr __host__ __device__ uint rgbToSingle(const uint& red, const uint& green, const uint& blue)
+	//implementation details for Spherical Colormap
+	namespace impl
 	{
-		return red*256*256 + green*256 + blue;
-	}
-
-	template<typename R>
-		__host__ __device__ bool testStripe(const R& angle, const R& stripe_interval, const R& stripe_half_width_ratio)
+		constexpr __host__ __device__ uint rgbToSingle(const uint& red, const uint& green, const uint& blue)
 		{
-			const auto stripe_number = angle/stripe_interval;
-			const auto stripe_remainder = stripe_number - lrint(stripe_number);
-			return abs(stripe_remainder) <= stripe_half_width_ratio;
+			return red*256*256 + green*256 + blue;
 		}
 
+		template<typename R>
+			__host__ __device__ bool testStripe(const R& angle, const R& stripe_interval, const R& stripe_half_width_ratio)
+			{
+				const auto stripe_number = angle/stripe_interval;
+				const auto stripe_remainder = stripe_number - lrint(stripe_number);
+				return abs(stripe_remainder) <= stripe_half_width_ratio;
+			}
+	}
+
+	//Draws a lat-long grid of lines at the given radius, and paints four areas in solid colors
+	//Paints pixels that do not reach the extraction radius in a distinct color
+	//This is more or less exactly like the map used in Bohn(2014) - http://arxiv.org/abs/1410.7775v2
 	struct SphericalColormap
 	{
 		template<typename R>
@@ -62,7 +69,7 @@ namespace ray
 					const R stripe_interval = PI/18.; //10 degrees
 
 					const uint black = 0;
-					if(testStripe(theta, stripe_interval, stripe_half_width_ratio) || testStripe(phi, stripe_interval, stripe_half_width_ratio))
+					if(impl::testStripe(theta, stripe_interval, stripe_half_width_ratio) || impl::testStripe(phi, stripe_interval, stripe_half_width_ratio))
 					{
 						return black;
 					}
@@ -73,25 +80,26 @@ namespace ray
 
 					if(y > R(0.) && z > R(0.))
 					{
-						return rgbToSingle(255, 0, 0);
+						return impl::rgbToSingle(255, 0, 0); //red
 					}
 					if(y < 0. && z > 0.)
 					{
-						return rgbToSingle(0, 255, 0);
+						return impl::rgbToSingle(0, 255, 0); //green
 					}
 					if(y > 0. && z < 0.)
 					{
-						return rgbToSingle(0, 0, 255);
+						return impl::rgbToSingle(0, 0, 255); //blue
 					}
 					else
 					{
-						return rgbToSingle(255, 255, 0);
+						return impl::rgbToSingle(255, 255, 0); //yellow
 					}
 				}
-				return rgbToSingle(0, 255, 255);
+				return impl::rgbToSingle(0, 255, 255); //cyan
 			}
 	};
 
+	//not templates
 	struct PngppImageWriter
 	{
 		private:

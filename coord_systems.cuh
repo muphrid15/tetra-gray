@@ -20,6 +20,10 @@ namespace ray
 	}
 
 
+	//Note that our spheroidal coordinates are different from, e.g. wikipedia's oblate spheroidal
+	//In particular, our angle nu is more like spherical coordinates' theta
+	//nu runs the range [0,pi] as a result
+	//posvec is assumed to be in cartesian coordinates
 	template<typename R>
 	__host__ __device__ inline Vector<R> spheroidalCoordinatesFromCartesian(const R& scale_factor_a, const Vector<R>& posvec)
 	{
@@ -44,6 +48,8 @@ namespace ray
 		return Vector<R>(spheroidal_coordinates);
 	} 
 
+	//All of the following assume t, x, y, z ordering for components, and return the spheroidal basis vector in terms of Cartesian components
+	//Angles are inputs here to reduce reduplication of computation of trig functions
 	template<typename R>
 	__host__ __device__ inline Vector<R> spheroidalBasisVectorEmu(const R& sinh_mu, const R& cosh_mu, const R& sin_nu, const R& cos_nu, const R& sin_phi, const R& cos_phi)
 	{

@@ -6,6 +6,8 @@
 
 namespace ray
 {
+	//Dynamic stepsize adjustment: photons blueshift as we approach black holes, and therefore move longer distances for the same affine parameter step
+	//This corrects that issue
 	struct DynamicStepsizeAdjuster
 	{
 		template<typename R>
@@ -16,6 +18,7 @@ namespace ray
 		}
 	};
 
+	//Dynamic stepsize stop condition is a way of implementing the redshift/blueshift detection in Bohn(2014) (http://arxiv.org/abs/1410.7775v2)
 	struct DynamicStepsizeStopCondition
 	{
 		template<typename R>

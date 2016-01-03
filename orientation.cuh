@@ -24,19 +24,24 @@ namespace ray
 			const R abs_bivec_norm = sqrt(abs(bivec_squared));
 			const R half_angle = angle/2.;
 			const auto mvone = Versor<R>(1.);
+
+			//Euclidean case
 			if(bivec_squared < R(0.))
 			{
 				const auto scalar_part = mvone*cos(half_angle);
-				const auto bivector_part = bivec*sin(half_angle)/abs_bivec_norm;
+				const auto bivector_part = Versor<R>(bivec*sin(half_angle)/abs_bivec_norm);
+				//the minus sign is correct for clifford, different from quats
 				return scalar_part - bivector_part;
 			}
+			//Hyperbolic case
 			else if(bivec_squared > R(0.))
 			{
 				const auto scalar_part = mvone*cosh(half_angle);
-				const auto bivector_part = bivec*sinh(half_angle)/abs_bivec_norm;
+				const auto bivector_part = Versor<R>(bivec*sinh(half_angle)/abs_bivec_norm);
 				return scalar_part - bivector_part;
 			}
-			return mvone - bivec*half_angle;
+			//Galilean case
+			return mvone - Versor<R>(bivec*half_angle);
 		}
 
 	/*

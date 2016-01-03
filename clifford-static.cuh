@@ -6,6 +6,8 @@ namespace multi
 {
 	namespace impl
 	{
+		//We're using curiously recurring template pattern here, to conveniently generate operators for Vector, Bivector, etc.
+		//Don't yet have a solution that naturally defines compound assignment operators
 		template<typename Derived, typename R, uint length>
 			class NumericalArray
 			{
@@ -149,6 +151,7 @@ namespace multi
 			__host__ __device__ Trivector(const BaseType& bt) : BaseType(bt) {}
 	};
 		
+	//Versor here meaning "even-graded multivector"
 	template<typename R>
 	class Versor : public impl::NumericalArray<Versor<R>, R, 8u>
 	{
@@ -213,6 +216,21 @@ namespace multi
 	{
 	};
 	*/
+	/*
+		Product operatios from clifford algebra
+		Some comments here may use notation like "0123 13 = -02"
+		This is shorthand for the product e_0 e_1 e_2 e_3 e_1 e_3 = -e_0 e_2
+		(where e_i is the ith basis vector)
+		(product is clifford, or geometric, product)
+		The products themselves define the reference ordering for components
+		However, as a general rule, components are ordered in "bit" ordering
+		Example: bivectors have 6 components here
+		e_0 e_1 corresponds to bit sequence 0011 (base 2) = 3 (base 10)
+		e_2 e_3 corresponds to bit sequence 1100 (base 2) = 12 (base 10)
+		Components are ordered by bit mask representation
+		Canonical order of basis vectors is ascending always, outside of this.
+		(that is, e_0 e_1 is correct order, e_1 e_0 is incorrect order)
+	   */
 
 	//Norms
 	template<typename R>
@@ -276,7 +294,6 @@ namespace multi
 		ret[5] = v1[2]*v2[3] - v1[3]*v2[2]; //bit 12
 		return Bivector<R>(ret);
 	}
-
 
 	template<typename R>
 	__host__ __device__ Trivector<R> operator^(const Bivector<R>& b1, const Vector<R>& v2)
@@ -359,6 +376,10 @@ namespace multi
 		return ret + b1*b2 + Versor<R>(b1*e2[0] + b2*e1[0] + (~b1)*e2[7] + (~b2)*e1[7]);
 	}
 
+	//Decompose a versor as scalar + bivector + pseudoscalar
+	//Resulting product of versor*vector*(versor inverse) has 9 terms
+	//Two terms are automatically zero (scalar vector pseudoscalar, and pseudo vector scalar)
+	//Two pairs of terms can be condensed, as the pairs are actually identical (see "partc" and "partf")
 	template<typename R>
 	__host__ __device__ Vector<R> bilinearMultiply(const Versor<R>& e1, const Vector<R>& v2)
 	{
