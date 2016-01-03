@@ -1,24 +1,24 @@
-Introducing **Caster Gray**, a CUDA-accelerated general-relativistic raytracer.  Caster Gray has performed raytracing in spinning black hole spacetimes using a single coordinate system, both inside and outside the black hole horizon.
+Introducing **Tetra Gray**, a CUDA-accelerated general-relativistic raytracer.  Tetra Gray has performed raytracing in spinning black hole spacetimes using a single coordinate system, both inside and outside the black hole horizon.
 
 Raytracing in general relativity sheds light on several interesting optical effects: curved spacetime bends light, requiring step-by-step integration of trajectories to compute the paths of light rays.
 
-# How does Caster Gray work?
+# How does Tetra Gray work?
 
-Caster Gray uses several semi-independent components to build up the raytracing simulation and image.  Broadly, the pipeline is broken down into distinct stages:
+Tetra Gray uses several semi-independent components to build up the raytracing simulation and image.  Broadly, the pipeline is broken down into distinct stages:
 
 - Image initial data: computing the directions of each photon corresponding to a single pixel, based on the field of view, camera position and orientation, and image dimensions.
 - Casting photons into the scene: the photons are evolved backward in time using numerical integration. The particular spacetime being used dictates the time derivatives of the photon's position and momentum.
 - Stopping evolution: numerical integration is terminated when the photon meets some termination condition. This could be a distance threshold from the central black hole or some analysis of the photon's redshift to determine that it is trapped within the black hole.
 - Converting photons to pixel colors: photon position and/or momentum dictates the color of the pixel it's associated with. This could be based on a real background image (a survey of the galaxy) or some artificial "painted" surface surrounding the system.
-- Writing the image to disk: Caster Gray uses png++.
+- Writing the image to disk: Tetra Gray uses png++.
 
-Caster Gray is designed to be modular: using higher-order functions, different termination conditions, integrators, spacetimes, or colormaps can be used without affecting the general structure of the computation.
+Tetra Gray is designed to be modular: using higher-order functions, different termination conditions, integrators, spacetimes, or colormaps can be used without affecting the general structure of the computation.
 
-Finally, Caster Gray uses thrust to parallelize the computation over an Nvidia GPU.
+Finally, Tetra Gray uses thrust to parallelize the computation over an Nvidia GPU.
 
 # Building and Running the Code
 
-Right now, Caster Gray must be built from source.  A sample `scons` SConstruct file is provided, which can build three executables:
+Right now, Tetra Gray must be built from source.  A sample `scons` SConstruct file is provided, which can build three executables:
 
 - `test` is a simple battery of tests to check for correctness and consistency with preexisting behavior, primarily for development purposes.
 - `flat` uses the `FlatRHS` functor, and is convenient as a test of the raytracer and colormap.
@@ -54,25 +54,25 @@ In the spinning black hole spacetime, we use an adaptive stepsize algorithm to s
 
 ## Termination Conditions
 
-The evolution of a single photon can be stopped by any arbitrary condition provided.  Typical ones are included in `image.cuh` and `stepsize.cuh`. Various reasons to stop the evolution include escape beyond a fixed radius, a total amount of the evolution parameter (corresponding, naively, to some maximum number of steps), or--in the case of adaptive steps--a maximum ratio between the baseline step and the current step.  The latter is particularly useful for detecting when photons fall irretreviably beyond a black hole horizon.
+The evolution of a single photon can be stopped by any arbitrary condition provided.  Typical ones are included in `image.cuh` and `stepsize.cuh`. Various reasons to stop the evolution include escape beyond a fixed radius, a total amount of the evolution parameter (corresponding, naively, to some maximum number of steps), or--in the case of adaptive steps--a maximum ratio between the baseline step and the current step.  The latter is particularly useful for detecting when photons fall irretrievably beyond a black hole horizon.
 
 ## Photon Array to Image
 
-Each photon is converted into an RGB color.  `image.cuh` has the `SphericalColormap` functor that we use for this (though again, this can be replaced by any other functor with appropriate signature). This paints a sphere with four regions of color and lattitude/longitude gridlines, making for easy visualization of the stretching of spacetime in all regions.
+Each photon is converted into an RGB color.  `image.cuh` has the `SphericalColormap` functor that we use for this (though again, this can be replaced by any other functor with appropriate signature). This paints a sphere with four regions of color and latitude/longitude gridlines, making for easy visualization of the stretching of spacetime in all regions.
 
 The image is then written to disk using `png++`.
 
 # Utilities, Tools, and Mathematical Models
 
-Caster Gray utilizes semi-indedepent tools to help glue together the raytracer:
+Tetra Gray utilizes semi-independent tools to help glue together the raytracer:
 
 - a "functional toolkit" provides a powerful interface for composing functors, both in host and device code
 - Clifford algebra provides the mathematical backbone of the tensor manipulations required for general relativistic spacetimes
-- The spinning black hole spacetime is descrbied by the Doran solution, which naturally lends itself to raytracing and clifford algebra
+- The spinning black hole spacetime is described by the Doran solution, which naturally lends itself to raytracing and clifford algebra
 
 ## Function Object Composition
 
-The directory `libftk` contains a Haskell-inspired set of templates for functors (in the category theory sense) and monads.  While Caster Gray does not use monads, it directly draws on this style to derive useful operators (in `operator.cuh`) for composing function objects and/or lambda functions, for partially applying these objects, and so on, all usable for function objects to be passed to Thrust for parallelization over the GPU.
+The directory `libftk` contains a Haskell-inspired set of templates for functors (in the category theory sense) and monads.  While Tetra Gray does not use monads, it directly draws on this style to derive useful operators (in `operator.cuh`) for composing function objects and/or lambda functions, for partially applying these objects, and so on, all usable for function objects to be passed to Thrust for parallelization over the GPU.
 
 ## Clifford Algebra-based Tensor Manipulations
 
