@@ -12,15 +12,15 @@ int main(void)
 	ray::raytrace(
 			1280U,
 			720U,
-			float(ray::PI/4.f),
+			float(ray::PI/2.f),
 			camposvec,
 			ray::Multivector<float>(1.f),
 			"flat.png",
-			1.f,
+			.05f,
 			ray::ImageInitialDataSolver(),
 			ode::RK4(),
 			ray::FlatRHS(),
-			ray::CombinedStopCondition() % extract_radius % 1000.f,
+			ray::CombinedStopCondition() % extract_radius % 200.f,
 			ray::SphericalColormap() % extract_radius,
 			ray::PngppImageWriter());
 }

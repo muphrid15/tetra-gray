@@ -411,8 +411,8 @@ namespace mv
 					{
 						for(uint j = 0; j < components(); j++)
 						{
-							const uint result_mask = i^j;
-							res.coeffs[result_mask] += coeffs[i]*mo.coeffs[j]*impl::contractionSign(plus_dim, minus_dim, zero_dim, i&j)*impl::permutationSign(i,j, plus_dim+minus_dim+zero_dim);
+								const uint result_mask = i^j;
+								res.coeffs[result_mask] += coeffs[i]*mo.coeffs[j]*impl::contractionSign(plus_dim, minus_dim, zero_dim, i&j)*impl::permutationSign(i,j, plus_dim+minus_dim+zero_dim);
 						}
 					}
 					return res;

@@ -14,6 +14,7 @@
 #include "libftk/functor.h"
 #include "libftk/operator.h"
 #include "image_id.cuh"
+#include "clifford-static.cuh"
 
 double rk4_test();
 int popcount_test();
@@ -46,6 +47,8 @@ void single_photon_test_position();
 void camera_id_test();
 void camera_id_host_test();
 void single_photon_test_position_doran();
+void clifford_static_rotation_test();
+void clifford_static_rotation_test2();
 
 int main(void)
 {
@@ -86,6 +89,9 @@ int main(void)
 	std::cout << "camera_id_test(): "; camera_id_test(); std::cout << std::endl;
 	std::cout << "camera_id_host_test(): "; camera_id_host_test(); std::cout << std::endl;
 	std::cout << "single_photon_test_position_doran(): "; single_photon_test_position_doran(); std::cout << std::endl;
+	
+	std::cout << "clifford_static_rotation_test(): "; clifford_static_rotation_test(); std::cout << std::endl;
+	std::cout << "clifford_static_rotation_test2(): "; clifford_static_rotation_test2(); std::cout << std::endl;
 	return 0;
 }
 
@@ -446,4 +452,24 @@ void single_photon_test_position_doran()
 	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
 	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
 	std::cout << "Momentum:"; hostresult[0].value.momentum.print(); std::cout << std::endl;
+}
+
+void clifford_static_rotation_test()
+{
+	using R = double;
+	const R evencomps[8] = { .707, 0., 0., .707, 0., 0., 0., 0. };	
+	const auto rotor = multi::Versor<R>(evencomps);
+	const R veccomps[4] = {0., 1., 0., 0.};
+	const auto vec = multi::Vector<R>(veccomps);
+	multi::bilinearMultiply(rotor, vec).print(); //[0 0 -1 0 ] is correct; the +.707 in the bivector part means we rotate clockwise
+}
+
+void clifford_static_rotation_test2()
+{
+	using R = double;
+	const R evencomps[8] = {1.038, 0., 0., 0., 0.278, 0., 0., 0. };	
+	const auto rotor = multi::Versor<R>(evencomps);
+	const R veccomps[4] = {0., 0., 1., 0.};
+	const auto vec = multi::Vector<R>(veccomps);
+	multi::bilinearMultiply(rotor, vec).print(); //[0 0 -1 0 ] is correct; the +.707 in the bivector part means we rotate clockwise
 }
