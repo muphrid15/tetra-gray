@@ -1,6 +1,6 @@
 env = DefaultEnvironment(CXXFLAGS='--std=gnu++11',  CCFLAGS='-Wall', LIBPATH='/usr/local/cuda-7.5/targets/x86_64-linux/lib')
 env.Tool('nvcc')
-env.Append(NVCCFLAGS='-std=c++11 -arch=sm_30 -g -G --expt-extended-lambda')
+env.Append(NVCCFLAGS='-std=c++11 -arch=sm_30 --resource-usage --expt-extended-lambda')
 env.Append(RPATH='/usr/local/cuda-7.5/targets/x86_64-linux/lib')
 testobj = env.Object(target='test.o', source='test.cu')
 flatobj = env.Object(target='flat.o', source='flat.cu')

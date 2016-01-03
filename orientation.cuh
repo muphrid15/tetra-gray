@@ -1,11 +1,11 @@
 #ifndef ORIENTATION_HDR
 #define ORIENTATION_HDR
-#include "clifford.cuh"
+#include "types.cuh"
 
 namespace ray
 {
-
 	//note this is not numerically stable for rotations near 180 degrees
+	/*
 	template<uint plus_dim, uint minus_dim, uint zero_dim, typename R>
 		__host__ __device__ mv::Multivector<plus_dim, minus_dim, zero_dim, R> simpleRotor(const mv::SingleGradedMultivector<1, plus_dim, minus_dim, zero_dim, R>& vstart, const mv::SingleGradedMultivector<1, plus_dim, minus_dim, zero_dim, R>& vend)
 		{
@@ -14,34 +14,38 @@ namespace ray
 			const auto bisector = vstart_normed + vend_normed;
 			return bisector*vstart;
 		}
+		*/
 
-	template<uint plus_dim, uint minus_dim, uint zero_dim, typename R>
-		__host__ __device__ mv::Multivector<plus_dim, minus_dim, zero_dim, R> simpleRotorFromAngle(const mv::SingleGradedMultivector<1, plus_dim, minus_dim, zero_dim, R>& v1, const mv::SingleGradedMultivector<1, plus_dim, minus_dim, zero_dim, R>& v2, const R& angle)
+	template<typename R>
+		__host__ __device__ Versor<R> simpleRotorFromAngle(const Vector<R> v1, const Vector<R>& v2,  const R& angle)
 		{
-			const auto bivec = (v1*v2) % 2;
-			const R bivec_squared = (bivec*bivec).scalarPart();
+			const auto bivec = v1^v2;
+			const R bivec_squared = bivec|bivec;
+			const R abs_bivec_norm = sqrt(abs(bivec_squared));
 			const R half_angle = angle/2.;
-			const auto mvone = mv::Multivector<plus_dim, minus_dim, zero_dim, R>(1.);
+			const auto mvone = Versor<R>(1.);
 			if(bivec_squared < R(0.))
 			{
-				const auto scalar_part = cos(half_angle)*mvone;
-				const auto bivector_part = sin(half_angle)*(bivec.normalize());
+				const auto scalar_part = mvone*cos(half_angle);
+				const auto bivector_part = bivec*sin(half_angle)/abs_bivec_norm;
 				return scalar_part - bivector_part;
 			}
 			else if(bivec_squared > R(0.))
 			{
-				const auto scalar_part = cosh(half_angle)*mvone;
-				const auto bivector_part = sinh(half_angle)*(bivec.normalize());
+				const auto scalar_part = mvone*cosh(half_angle);
+				const auto bivector_part = bivec*sinh(half_angle)/abs_bivec_norm;
 				return scalar_part - bivector_part;
 			}
-			return mvone - half_angle*bivec;
+			return mvone - bivec*half_angle;
 		}
 
+	/*
 	template<typename X>
 		__host__ __device__ X bilinearMultiply(const X& versor, const X& input)
 		{
 			return versor*input*versor.inverse();
 		}
+		*/
 }
 
 #endif

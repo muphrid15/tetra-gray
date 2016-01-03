@@ -15,7 +15,7 @@ namespace ray
 				const auto momrhs = Vector<R>();
 
 				const auto posrhs = data.momentum;
-				const auto rhs = pt::makeParticle(posrhs, momrhs);
+				const auto rhs = Particle<R>(posrhs, momrhs);
 
 				return rhs;
 			}
@@ -38,8 +38,8 @@ namespace ray
 		__host__ __device__ inline Vector<R> doranPositionGauge(const R& sinh_mu, const Vector<R>& emuhat, const R& scale_factor_a, const Vector<R>& doran_vec_v, const Vector<R>& vec_arg)
 		{
 			const auto rootfactor = R(sqrt(2.*sinh_mu/scale_factor_a/(1.+sinh_mu*sinh_mu)));
-			const auto dot_product = (vec_arg*doran_vec_v).scalarPart();
-			return vec_arg + rootfactor*dot_product*emuhat;
+			const auto dot_product = (vec_arg|doran_vec_v);
+			return vec_arg + emuhat*rootfactor*dot_product;
 		}
 
 	template<typename R>
@@ -47,18 +47,30 @@ namespace ray
 		{
 			const R alpha = R(-sqrt(2.*sinh_mu/(scale_factor_a*(sinh_mu*sinh_mu + cos_nu*cos_nu))));
 
-			const auto common_denom_inverse = (scale_factor_a*(Multivector<R>(sinh_mu) + Multivector<R>::makePseudoscalar(cos_nu)));
+			/*
+			const auto common_denom_inverse = (scale_factor_a*(Versor<R>(sinh_mu) + Versor<R>::makePseudoscalar(cos_nu)));
 			const auto common_denom = common_denom_inverse.inverse();
+			*/
 
-			const auto arg_dot_mu = (vec_arg*muhat).scalarPart();
-			const auto arg_dot_nu = (vec_arg*nuhat).scalarPart();
-			const auto arg_dot_phi = (vec_arg*phihat).scalarPart();
+			const auto arg_dot_mu = (vec_arg|muhat);
+			const auto arg_dot_nu = (vec_arg|nuhat);
+			const auto arg_dot_phi = (vec_arg|phihat);
 
-			const auto uterm = R(1./alpha)*Bivector<R>(common_denom*common_denom*Bivector<R>(muhat*doran_v));
-			const auto nuterm = alpha*Bivector<R>(-common_denom*Bivector<R>(nuhat*doran_v));
-			const auto phiterm = alpha/cosh(beta)*Bivector<R>(-common_denom*Bivector<R>(phihat*that));
+//			const auto uterm = Bivector<R>(common_denom*common_denom*Bivector<R>(muhat^doran_v))*R(1./alpha);
+			const auto muterm = (muhat^doran_v)*R(1./alpha);
+//			const auto nuterm = Bivector<R>(-common_denom*Bivector<R>(nuhat*doran_v))*alpha;
+			const auto nuterm = (-nuhat^doran_v)*alpha;
+//			const auto phiterm = Bivector<R>(-common_denom*Bivector<R>(phihat^that))*(alpha/cosh(beta));
+			const auto phiterm = -(phihat^that)*(alpha/cosh(beta));
 
-			return arg_dot_mu*uterm + arg_dot_nu*nuterm + arg_dot_phi*phiterm;
+			const auto common_scalar = scale_factor_a*sinh_mu;
+			const auto common_pseudo = scale_factor_a*cos_nu;
+			const auto common_denom = (common_scalar*common_scalar + common_pseudo*common_pseudo);
+
+			const auto mu_scalar = (common_scalar*common_scalar - common_pseudo*common_pseudo)/(common_denom*common_denom);
+			const auto mu_pseudo = R(2.*common_scalar*common_pseudo)/(common_denom*common_denom);
+
+			return (muterm*mu_scalar + (~muterm)*mu_pseudo)*arg_dot_mu/(common_denom*common_denom) + ((nuterm*common_scalar + (~nuterm)*common_pseudo)*arg_dot_nu + (phiterm*common_scalar + (~phiterm)*common_pseudo)*arg_dot_phi)/(common_denom);
 		}
 
 	struct DoranRHS
@@ -68,9 +80,9 @@ namespace ray
 			{
 				const auto spheroidal_coords = spheroidalCoordinatesFromCartesian(scale_factor_a, data.position);
 
-				const R mu = spheroidal_coords.extractComponent(0);
-				const R nu = spheroidal_coords.extractComponent(1);
-				const R phi = spheroidal_coords.extractComponent(2);
+				const R mu = spheroidal_coords[1];
+				const R nu = spheroidal_coords[2];
+				const R phi = spheroidal_coords[3];
 
 				const R sinh_mu = sinh(mu);
 				const R cosh_mu = cosh(mu);
@@ -87,8 +99,8 @@ namespace ray
 				const auto doran_vector_v = doranVectorV(beta, sin_phi, cos_phi, that, phihat);
 
 				const auto posrhs = doranPositionGauge(sinh_mu, muhat, scale_factor_a, doran_vector_v, data.momentum);
-				const auto momrhs = -Vector<R>(doranRotationGauge(sinh_mu, cos_nu, muhat, nuhat, phihat, that, beta, doran_vector_v, scale_factor_a, data.momentum)*data.momentum);
-				return pt::makeParticle(posrhs, momrhs);
+				const auto momrhs = -(doranRotationGauge(sinh_mu, cos_nu, muhat, nuhat, phihat, that, beta, doran_vector_v, scale_factor_a, data.momentum)|data.momentum);
+				return Particle<R>(posrhs, momrhs);
 			}
 	};
 }

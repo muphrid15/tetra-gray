@@ -11,7 +11,7 @@ namespace ray
 		template<typename R>
 		__host__ __device__ ParticleData<R> operator()(const R& dparam0, const ParticleData<R>& data) const
 		{
-			const R ratio = abs(data.value.momentum.extractComponent(3));
+			const R ratio = abs(data.value.momentum[0]);
 			return ParticleData<R>(data.value, data.param, dparam0/ratio);
 		}
 	};

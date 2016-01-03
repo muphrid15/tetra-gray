@@ -12,7 +12,7 @@ namespace ray
 		template<typename R>
 			__host__ __device__ bool operator()(const R& radius, const ParticleData<R>& pdata) const
 			{
-				return sphericalCoordinatesFromCartesian(pdata.value.position).extractComponent(0) >= radius;
+				return sphericalCoordinatesFromCartesian(pdata.value.position)[1] >= radius;
 			}	
 	};
 
@@ -55,8 +55,8 @@ namespace ray
 				if(MaxRadiusStopCondition()(escape_radius, pdata))
 				{
 					const auto spherical_coords = sphericalCoordinatesFromCartesian(pdata.value.position);	
-					const auto theta = spherical_coords.extractComponent(1);
-					const auto phi = spherical_coords.extractComponent(2);
+					const auto theta = spherical_coords[2];
+					const auto phi = spherical_coords[3];
 
 					const R stripe_half_width_ratio = .05;
 					const R stripe_interval = PI/18.; //10 degrees
@@ -67,9 +67,9 @@ namespace ray
 						return black;
 					}
 
-					const auto x = pdata.value.position.extractComponent(0);
-					const auto y = pdata.value.position.extractComponent(1);
-					const auto z = pdata.value.position.extractComponent(2);
+					const auto x = pdata.value.position[1];
+					const auto y = pdata.value.position[2];
+					const auto z = pdata.value.position[3];
 
 					if(y > R(0.) && z > R(0.))
 					{

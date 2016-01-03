@@ -14,7 +14,7 @@ namespace ray
 			const uint& img_height_px,
 			const R& horizontal_fov,
 			const Vector<R>& camera_position,
-			const Multivector<R>& camera_orientation,
+			const Versor<R>& camera_orientation,
 			const char* out_filename,
 			const R& stepsize,
 			const ImageID& img_id,

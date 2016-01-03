@@ -49,6 +49,7 @@ void camera_id_host_test();
 void single_photon_test_position_doran();
 void clifford_static_rotation_test();
 void clifford_static_rotation_test2();
+void doran_rhs_test();
 
 int main(void)
 {
@@ -92,6 +93,7 @@ int main(void)
 	
 	std::cout << "clifford_static_rotation_test(): "; clifford_static_rotation_test(); std::cout << std::endl;
 	std::cout << "clifford_static_rotation_test2(): "; clifford_static_rotation_test2(); std::cout << std::endl;
+	std::cout << "doran_rhs_test(): "; doran_rhs_test(); std::cout << std::endl;
 	return 0;
 }
 
@@ -265,10 +267,10 @@ int device_list_fmap_test(void)
 void single_particle_evolve_test()
 {
 	using R = double;
-	using Pt = pt::Particle<3, 1, 0, R>;
+	using Pt = pt::Particle<R>;
 
 	const R posarr[4] = {0., 0., 0., 0.};
-	const R momarr[4] = {0., 0., 0., 1.};
+	const R momarr[4] = {1., 0., 0., 0.};
 
 	const auto pinit = Pt(posarr, momarr);	
 
@@ -279,6 +281,7 @@ void single_particle_evolve_test()
 
 void multivector_rotate_test()
 {
+	/*
 	using Mv = mv::Multivector<2,0,0,double>;
 	using SMv = mv::SingleGradedMultivector<1,2,0,0,double>;
 	double veca[2] = {1., 0.};
@@ -293,25 +296,28 @@ void multivector_rotate_test()
 
 	const auto rotor = ray::simpleRotor(smva, smvb);
 	ray::bilinearMultiply(rotor, Mv::makeMultivectorFromGrade(smvc)).print();
+	*/
+
+	std::cout << "Obsolete" << std::endl;
 }
 
 void multivector_trig_rotate_test()
 {
-	using Mv = mv::Multivector<2,0,0,double>;
-	using SMv = mv::SingleGradedMultivector<1,2,0,0,double>;
-	double veca[2] = {1., 0.};
-	double vecb[2] = {0., 1.};
+	using Mv = multi::Versor<double>;
+	using SMv = multi::Vector<double>;
+	double veca[4] = {0., 1., 0, 0.};
+	double vecb[4] = {0., 0., 1., 0.};
 
 	const auto smva = SMv(veca);
 	const auto smvb = SMv(vecb);
 
-	double vecc[2] = {1., 0.};
+	double vecc[4] = {0., 1., 0., 0.};
 	const auto smvc = SMv(vecc);
-	const double angle = 1.5708; //PI/4
+	const double angle = 1.5708; //PI/2
 
 
 	const auto rotor = ray::simpleRotorFromAngle(smva, smvb, angle);
-	ray::bilinearMultiply(rotor, Mv::makeMultivectorFromGrade(smvc)).print();
+	multi::bilinearMultiply(rotor, smvc).print();
 }
 
 void compress_to_grade_test()
@@ -336,10 +342,10 @@ void single_photon_test()
 	using ftk::operator|;
 	using ftk::operator>>;
 	using cudaftk::operator*;
-	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const auto camposvec = ray::Vector<float>(campos);
-	const float pho_mom[4] = {-.707f, -.707f, 0.f, -1.f};
+	const float pho_mom[4] = {-1.f, -.707f, -.707f, 0.f};
 	const auto photon_momentum = ray::Vector<float>(pho_mom);
 
 	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
@@ -361,10 +367,10 @@ void single_photon_test_position()
 	using ftk::operator|;
 	using ftk::operator>>;
 	using cudaftk::operator*;
-	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const auto camposvec = ray::Vector<float>(campos);
-	const float pho_mom[4] = {-.707f, -.707f, 0.f, -1.f};
+	const float pho_mom[4] = {-1.f, -.707f, -.707f, 0.f};
 	const auto photon_momentum = ray::Vector<float>(pho_mom);
 	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
 
@@ -386,17 +392,17 @@ void camera_id_test()
 	using ftk::operator|;
 	using ftk::operator>>;
 	using cudaftk::operator*;
-	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float campos[4] = {20.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const auto camposvec = ray::Vector<float>(campos);
-	const float pho_mom[4] = {-1.f, 0.f, 0.f, -1.f};
+	const float pho_mom[4] = {-1.f, -1.f, 0.f, 0.f};
 	const auto photon_momentum = ray::Vector<float>(pho_mom);
 	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
 
 //	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
 	const auto zero_list = cudaftk::GPUList<uint>(0u);
 	auto result = zero_list | ftk::fmap >>
-		((ray::ImageInitialDataSolver() % camposvec % ray::Multivector<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
+		((ray::ImageInitialDataSolver() % camposvec % ray::Versor<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
 
 	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
 	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
@@ -411,17 +417,17 @@ void camera_id_host_test()
 	using ftk::operator|;
 	using ftk::operator>>;
 	using cudaftk::operator*;
-	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const auto camposvec = ray::Vector<float>(campos);
-	const float pho_mom[4] = {-1.f, 0.f, 0.f, -1.f};
+	const float pho_mom[4] = {-1.f, -1.f, 0.f, 0.f};
 	const auto photon_momentum = ray::Vector<float>(pho_mom);
 	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, 1.f);
 
 //	const auto olist = cudaftk::GPUList<ray::ParticleData<float> >(odata);
 	const auto zero_list = cudaftk::CPUList<uint>(0u);
 	auto result = zero_list | ftk::fmap >>
-		((ray::ImageInitialDataSolver() % camposvec % ray::Multivector<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
+		((ray::ImageInitialDataSolver() % camposvec % ray::Versor<float>(1.f) % 1280u % 720u % float(ray::PI/4.f) % 1.f));
 
 	thrust::host_vector<ray::ParticleData<float> > hostresult = result.unpack();
 	std::cout << "Position:"; hostresult[0].value.position.print(); std::cout << std::endl;
@@ -436,10 +442,10 @@ void single_photon_test_position_doran()
 	using ftk::operator|;
 	using ftk::operator>>;
 	using cudaftk::operator*;
-	const float campos[4] = {20.f, 0.f, 0.f, 0.f};
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
 	const float extract_radius = 50.f;
 	const auto camposvec = ray::Vector<float>(campos);
-	const float pho_mom[4] = {-.707f, -0.707f, 0.f, -1.f};
+	const float pho_mom[4] = {-1.f, -.707f, -0.707f, 0.f};
 	const auto photon_momentum = ray::Vector<float>(pho_mom);
 	const auto odata = ray::ParticleData<float>(ray::Particle<float>(camposvec, photon_momentum), 0.f, .1f);
 
@@ -457,7 +463,7 @@ void single_photon_test_position_doran()
 void clifford_static_rotation_test()
 {
 	using R = double;
-	const R evencomps[8] = { .707, 0., 0., .707, 0., 0., 0., 0. };	
+	const R evencomps[8] = { .923879, 0., 0., -.382683, 0., 0., 0., 0. };	
 	const auto rotor = multi::Versor<R>(evencomps);
 	const R veccomps[4] = {0., 1., 0., 0.};
 	const auto vec = multi::Vector<R>(veccomps);
@@ -473,3 +479,20 @@ void clifford_static_rotation_test2()
 	const auto vec = multi::Vector<R>(veccomps);
 	multi::bilinearMultiply(rotor, vec).print(); //[0 0 -1 0 ] is correct; the +.707 in the bivector part means we rotate clockwise
 }
+
+void doran_rhs_test()
+{
+	const float campos[4] = {0.f, 20.f, 0.f, 0.f};
+	const auto camposvec = ray::Vector<float>(campos);
+	const float pho_mom[4] = {-1.f, -1.f, 0.f, 0.f};
+	const auto photon_momentum = ray::Vector<float>(pho_mom);
+
+	const auto particle = ray::Particle<float>(camposvec, photon_momentum);
+	const auto particle_rhs = ray::DoranRHS()(particle, 0.f, .5f);
+	
+	std::cout << "Position rhs:"; particle_rhs.position.print(); std::cout << std::endl;
+	std::cout << "Momentum rhs:"; particle_rhs.momentum.print(); std::cout << std::endl;
+}
+
+
+
