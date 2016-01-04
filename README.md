@@ -2,6 +2,14 @@ Introducing **Tetra Gray**, a CUDA-accelerated general-relativistic raytracer.  
 
 Raytracing in general relativity sheds light on several interesting optical effects: curved spacetime bends light, requiring step-by-step integration of trajectories to compute the paths of light rays.
 
+It does something like this. Here's a flat space image with a false-color sphere:
+
+![flat](images/flat.png)
+
+And here's that same system with a spinning black hole in front of the camera:
+
+![doran](image/doran.png)
+
 # How does Tetra Gray work?
 
 Tetra Gray uses several semi-independent components to build up the raytracing simulation and image.  Broadly, the pipeline is broken down into distinct stages:
