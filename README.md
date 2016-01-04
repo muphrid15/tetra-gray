@@ -8,7 +8,7 @@ It does something like this. Here's a flat space image with a false-color sphere
 
 And here's that same system with a spinning black hole in front of the camera:
 
-![doran](image/doran.png)
+![doran](images/doran.png)
 
 # How does Tetra Gray work?
 
